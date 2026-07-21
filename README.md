@@ -8,29 +8,23 @@ keep track of what version you are using if you need to maintain consistency.
 ## Installation
 
 There are currently two ways to get `minervachem` up and running: 
-1. Build from conda `env.yml` and this git repo
-2. NOT RECOMMENDED install this repo and dependencies via `pip`
+1. Build from conda `conda-lock.yml` (Recommended)
+2. Build from conda `env.yml`
 
-### Conda installation
+### Supported Environments
+* Linux / WSL X64 (Recommended)
+* Mac ARM
+* Windows X64 (Unverified)
+
+### Prerequisites
+A working version of Miniconda (recommended) or Anaconda.
+
+### Conda installation (Recommended)
 
 Steps: 
 1. Clone this repo and `cd` into it
-2. 
-    a. If creating a new conda environment: `conda env create -n minervachem --file env.yml`
-    b. If installing into an existing conda environment: `conda env update -n <YOUR_ENV_NAME> -f env.yml`
-3. `pip install -e .`
-
-### Pip Installation 
-
-**This is not recommended**  
-
-Steps: 
-1. Clone this repo and `cd` into it.
-2. install the package with `pip install -e .`
-3. If running demos, install your preferred variant of jupyter
-
-### For Developers
-You'll also want to run `pip install -r requirements_developer.txt`
+2. `conda install -n base -c conda-forge conda-lock -y`
+3. `conda run -n base conda-lock install -n minervachem conda-lock.yml`
 
 # Getting started with `minervachem`
 
