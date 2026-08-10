@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools<81", "wheel"]
+requires = ["setuptools>=61,<81", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -36,6 +36,59 @@ dependencies = [
     "pytdc",
     "pytest>=6.2.4",
     "coverage>=5.5",
+]
+
+classifiers = [
+    [build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minervachem"
+version = "0.0.3"
+description = "Machine learning for Cheminformatics"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+authors = [
+    { name = "Michael Frederick Tynes", email = "mtynes@lanl.gov" }
+]
+dependencies = [
+    "matplotlib",
+    "scikit-learn>=1.2.2,<1.4",
+    "ipywidgets",
+    "dask",
+    "distributed",
+    "seaborn",
+    "tqdm",
+    "rdkit==2023.9.6",
+    "lightgbm",
+    "imageio",
+    "numpy",
+    "flaml",
+    "jupyterlab",
+    "scipy>=1.10,<1.12",
+    "pillow",
+    "joblib>=1.3.0",
+    "pandas",
+    "sparse",
+    "svglib",
+    "cairosvg",
+    "sigfig",
+    "networkx",
+    "xgboost",
+    "pytdc",
+    "pytest>=6.2.4",
+    "coverage>=5.5",
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Software Development :: Libraries",
 ]
 
 [tool.setuptools.packages.find]
