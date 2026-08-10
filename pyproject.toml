@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "minervachem"
 version = "0.1.0"
-description = "random-logic unofficial minervachem release"
+description = "Machine learning for Cheminformatics"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 
