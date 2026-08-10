@@ -8,50 +8,11 @@ version = "0.1.0"
 description = "random-logic unofficial minervachem release"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
-dependencies = [
-    "matplotlib",
-    "scikit-learn>=1.2.2,<1.4",
-    "ipywidgets",
-    "dask",
-    "distributed",
-    "seaborn",
-    "tqdm",
-    "rdkit==2023.9.6",
-    "lightgbm",
-    "imageio",
-    "numpy",
-    "flaml",
-    "jupyterlab",
-    "scipy>=1.10,<1.12",
-    "pillow",
-    "joblib>=1.3.0",
-    "pandas",
-    "sparse",
-    "svglib",
-    "cairosvg",
-    "sigfig",
-    "networkx",
-    "setuptools<81",
-    "xgboost",
-    "pytdc",
-    "pytest>=6.2.4",
-    "coverage>=5.5",
-]
 
-classifiers = [
-    [build-system]
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "minervachem"
-version = "0.0.3"
-description = "Machine learning for Cheminformatics"
-readme = "README.md"
-requires-python = ">=3.11,<3.12"
 authors = [
     { name = "Michael Frederick Tynes", email = "mtynes@lanl.gov" }
 ]
+
 dependencies = [
     "matplotlib",
     "scikit-learn>=1.2.2,<1.4",
@@ -90,6 +51,10 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Chemistry",
     "Topic :: Software Development :: Libraries",
 ]
+
+[project.urls]
+Homepage = "https://www.github.com/lanl/minervachem/"
+Repository = "https://www.github.com/lanl/minervachem/"
 
 [tool.setuptools.packages.find]
 where = ["."]
