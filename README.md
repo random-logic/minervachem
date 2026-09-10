@@ -24,17 +24,19 @@ A working version of Miniconda (recommended) or Anaconda. Or, a working version 
 Steps:
 
 1. Clone this repo and `cd` into it
-2. `conda install -n base -c conda-forge conda-lock -y`
-3. `conda run -n base conda-lock install -n minervachem conda-lock.yml`
-4. `conda activate minervachem`
+2. Download `conda-lock.yml` from the repo release page
+3. `conda install -n base -c conda-forge conda-lock -y`
+4. `conda run -n base conda-lock install -n minervachem conda-lock.yml`
+5. `conda activate minervachem`
 
 ### UV installation
 
 Steps:
 
 1. Clone this repo and `cd` into it
-2. `uv sync`
-3. Choose one:
+2. Download `uv.lock` from the repo release page
+3. `uv sync`
+4. Choose one:
     - `source .venv/bin/activate` (Linux / MacOS)
     - `.venv\Scripts\activate.bat` (Windows)
 
