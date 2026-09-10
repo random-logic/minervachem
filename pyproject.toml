@@ -61,8 +61,8 @@ where = ["."]
 include = ["minervachem*"]
 
 [tool.uv]
-required-environments = [
-    "sys_platform == 'linux'",
-    "sys_platform == 'win32'",
+environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
     "sys_platform == 'darwin' and platform_machine == 'arm64'",
 ]
