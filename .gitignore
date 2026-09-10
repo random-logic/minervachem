@@ -8,3 +8,5 @@ build/*
 **/.ipynb_checkpoints/*
 **/*.pkl
 .gitattributes
+conda-lock.yml
+uv.lock
