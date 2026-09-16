@@ -61,12 +61,5 @@ Repository = "https://www.github.com/lanl/minervachem/"
 where = ["."]
 include = ["minervachem*"]
 
-[tool.uv]
-environments = [
-    "sys_platform == 'linux' and platform_machine == 'x86_64'",
-    "sys_platform == 'win32' and platform_machine == 'AMD64'",
-    "sys_platform == 'darwin' and platform_machine == 'arm64'",
-]
-
 [tool.uv.sources]
 buhito = { git = "https://github.com/random-logic/buhito.git" }
