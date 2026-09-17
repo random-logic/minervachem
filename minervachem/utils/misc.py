@@ -1,8 +1,9 @@
-import multiprocessing
 import numpy as np
 import pandas as pd
 from collections import defaultdict
 import time
+
+from buhito.utilities import evenly_distribute_jobs, uniquify_lol
 
 def rank(a):
     return np.argsort(np.argsort(a))
@@ -27,26 +28,6 @@ def sizeof_fmt(num, suffix='B'):
             return "%3.1f %s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f %s%s" % (num, 'Y', suffix)
-
-def evenly_distribute_jobs(n_items, n_jobs): 
-    n_cpu = multiprocessing.cpu_count()
-    if n_jobs in [None, 1]: 
-        batch_size = 'auto'
-    elif n_jobs == -1: 
-        batch_size = n_items // n_cpu
-    elif n_jobs < -1  and -n_jobs < n_cpu: 
-        batch_size = n_items // n_cpu + n_jobs
-    else: 
-        batch_size = 1 // n_jobs
-
-    if batch_size == 0: 
-        batch_size = 1
-    return batch_size
-
-def uniquify_lol(list_of_lists):
-    """Given a list of lists, return a sorted list of the unique elements in the inner lists"""
-    u = set().union(*[set(_) for _ in list_of_lists])
-    return sorted(list(u))
 
 def bits_by_size(bits, size): 
     return {s: bits[size==s] for s in pd.Series(size).sort_values().unique()}
@@ -135,4 +116,3 @@ def find_inds(bitid, biinfo):
         if k[1]==bitid:
             return v[0]
     return None
-

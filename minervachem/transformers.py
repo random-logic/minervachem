@@ -17,6 +17,8 @@ from rdkit import Chem
 
 from tqdm.auto import tqdm
 
+from buhito.transformers import GraphletTransformer
+
 from .utils import misc
 from minervachem.utils.misc import uniquify_lol
 from minervachem.utils.sparse import select_columns_from_matrix
@@ -327,9 +329,7 @@ class FingerprintFeaturizer(BaseEstimator, TransformerMixin):
 
         For an rdkit.Molecule, return a fingerprint and a list of tuples of form (bit, r)
         """
-        fp, bi = fingerprinter(mol)
-        bits = list(fp.keys())
-        return fp, bi, bits
+        return GraphletTransformer._get_fp(mol, fingerprinter)
     
     def _to_sparse(self, fps, used_bits):
         """Convert a list of morgan fingerprints (represented as dicts) to a sparse matrix 
@@ -338,17 +338,9 @@ class FingerprintFeaturizer(BaseEstimator, TransformerMixin):
         :param used_bits: the unique bits present in fps
         """
         
-        M = sp.sparse.dok_matrix((len(fps), len(used_bits)), dtype=int)
-        for i, fp in tqdm(enumerate(fps), 
-                          'Converting FPs to sparse', 
-                          total=len(fps),
-                          disable=not self.verbose): 
-            for bit, count in fp.items(): 
-                if bit in used_bits.keys():
-                    j = used_bits[bit]
-                    M[(i, j)] = count
-                    
-        return M
+        # Buhito builds this efficiently as COO. Preserve Minervachem's
+        # historical private-method return format for compatibility.
+        return GraphletTransformer._to_sparse(self, fps, used_bits).todok()
 
 class SparseFeatureEliminator(BaseEstimator, TransformerMixin): 
 
