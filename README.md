@@ -44,6 +44,18 @@ Steps:
 
 We recommend looking through and running the notebooks in the `demos/` directory for a detailed introduction to `minervachem`'s funcitonality.
 
+## Running Reddit Demo
+
+### Graphlets
+```sh
+uv run python demos/reddit_example/reddit_graphlets_example.py
+```
+
+### Benchmark
+```sh
+uv run python demos/reddit_example/reddit_individual_graphs_benchmark.py demos/reddit_example/reddit_graphs_benchmarks
+```
+
 ## Highlights
 
 ### Constructing graphlet fingerprints
