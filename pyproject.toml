@@ -40,7 +40,7 @@ dependencies = [
     "pytdc",
     "pytest>=6.2.4",
     "coverage>=5.5",
-    "buhito",
+    "buhito<1.0",
     "setuptools>=61,<82",
 ]
 
@@ -61,6 +61,3 @@ Repository = "https://www.github.com/lanl/minervachem/"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["minervachem*"]
-
-[tool.uv.sources]
-buhito = { git = "https://github.com/random-logic/buhito.git" }

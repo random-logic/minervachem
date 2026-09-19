@@ -138,8 +138,8 @@ css = [
 
 [[package]]
 name = "buhito"
-version = "0.1.dev8+g581d8a9ed"
-source = { git = "https://github.com/random-logic/buhito.git#581d8a9eddc48fb7440cdb0ba62c270616e0ab7e" }
+version = "0.0.1a1"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "joblib" },
     { name = "matplotlib" },
@@ -153,6 +153,10 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2d/a2/745952078f7004bb04fba26944cae264a27fb05a66f2a69a40d102a15d78/buhito-0.0.1a1.tar.gz", hash = "sha256:78258fd62e9cbbd0b7cc135aefd7cca849f51a21252fb6a84eff40b6a3aa3f4b", size = 10933410, upload-time = "2026-09-19T01:07:09.892Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7f/a5/28605fbc3e0838cbc35c64638a6210071aed1eb0f48f3014f81453f05bce/buhito-0.0.1a1-py3-none-any.whl", hash = "sha256:042b307462e0dd6751de7a6a7531a810e938fd4037f3cffae7bb0e957f5255ee", size = 21980, upload-time = "2026-09-19T01:07:08.049Z" },
 ]
 
 [[package]]
@@ -1182,7 +1186,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "buhito", git = "https://github.com/random-logic/buhito.git" },
+    { name = "buhito", specifier = "<1.0" },
     { name = "cairosvg" },
     { name = "coverage", specifier = ">=5.5" },
     { name = "dask" },
