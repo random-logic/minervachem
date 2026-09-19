@@ -7,36 +7,9 @@ keep track of what version you are using if you need to maintain consistency.
 
 ## Installation
 
-There are currently two ways to get `minervachem` up and running: 
-1. Build from conda `conda-lock.yml` (Recommended)
-2. Build from `uv.lock`
-
-### Supported Environments
-* Linux / WSL X64 (Recommended)
-* Mac ARM
-* Windows X64 (Unverified)
-
-### Prerequisites
-A working version of Miniconda (recommended) or Anaconda. Or, a working version of UV.
-
-### Conda installation (Recommended)
-
-Steps:
-
 1. Clone this repo and `cd` into it
-2. Download `conda-lock.yml` from the repo release page
-3. `conda install -n base -c conda-forge conda-lock -y`
-4. `conda run -n base conda-lock install -n minervachem conda-lock.yml`
-5. `conda activate minervachem`
-
-### UV installation
-
-Steps:
-
-1. Clone this repo and `cd` into it
-2. Download `uv.lock` from the repo release page
-3. `uv sync`
-4. Choose one:
+2. `uv sync`
+3. Choose one:
     - `source .venv/bin/activate` (Linux / MacOS)
     - `.venv\Scripts\activate.bat` (Windows)
 
