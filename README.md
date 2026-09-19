@@ -87,7 +87,7 @@ print(fp)
 from minervachem.plotting import plot_fingerprint
 plot_fingerprint(mol, fingerprinter)
 ```
-![A plot of the molecular graphlets of benzene up to size 3 atoms, their counts, and their identifiers](demos/benzene_bits.png)
+![A plot of the molecular graphlets of benzene up to size 3 atoms, their counts, and their identifiers](https://raw.githubusercontent.com/lanl/minervachem/main/demos/benzene_bits.png)
 
 ### scikit-learn transformers
 
@@ -150,7 +150,7 @@ parity_plot_train_test([X_train, X_test],
                        ylab='Linear Model (kcal/mol)', 
                        title='Hierarchical Model Prediction');   
 ```
-![Hierarchical model performance](demos/hmodel_perf.png)
+![Hierarchical model performance](https://raw.githubusercontent.com/lanl/minervachem/main/demos/hmodel_perf.png)
 
 
 #### Model interpretations
@@ -176,7 +176,7 @@ draw_projected_coefs(dags,
                      level=2, # bond-level interpretations (atom-level is 1)
                     )
 ```
-![Hierarhcical model interpretation](demos/hmodel_interp.png)
+![Hierarhcical model interpretation](https://raw.githubusercontent.com/lanl/minervachem/main/demos/hmodel_interp.png)
 
 
 ## Citation 
