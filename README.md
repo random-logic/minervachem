@@ -8,7 +8,7 @@ keep track of what version you are using if you need to maintain consistency.
 ## Installation
 
 1. Clone this repo and `cd` into it
-2. `uv sync`
+2. `uv sync --all-extras`
 3. Choose one:
     - `source .venv/bin/activate` (Linux / MacOS)
     - `.venv\Scripts\activate.bat` (Windows)

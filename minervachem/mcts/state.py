@@ -2,11 +2,9 @@ import random
 from rdkit.Chem import Descriptors
 import numpy as np
 import hashlib
-import os
-import sys
-sys.path.append(os.path.join(os.environ["CONDA_PREFIX"], "share", "RDKit", "Contrib"))
-from SA_Score import sascorer
 from rdkit import Chem
+
+from .sa_score import sascorer
 
 
 class State:
