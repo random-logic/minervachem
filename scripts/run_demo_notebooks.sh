@@ -93,6 +93,7 @@ fi
 
 PROJECT_DIR="$MINERVACHEM_PROJECT_DIR"
 LOG_DIR="$PROJECT_DIR/logs"
+OUTPUT_DIR="$PROJECT_DIR/executed_notebooks"
 UV_RUN=(uv run --project "$PROJECT_DIR")
 
 if [[ -z "${MINERVACHEM_NOTEBOOK:-}" ]]; then
@@ -103,6 +104,7 @@ fi
 notebook="$MINERVACHEM_NOTEBOOK"
 
 mkdir -p "$LOG_DIR"
+mkdir -p "$OUTPUT_DIR"
 
 echo "Project directory: $PROJECT_DIR"
 echo "Notebook: $notebook"
@@ -126,7 +128,7 @@ RUNTIME_BASE="${SLURM_TMPDIR:-/tmp}/minervachem-${SLURM_JOB_ID}"
 export JUPYTER_RUNTIME_DIR="$RUNTIME_BASE/jupyter"
 export IPYTHONDIR="$RUNTIME_BASE/ipython"
 export MPLCONFIGDIR="$RUNTIME_BASE/matplotlib"
-export MPLBACKEND=Agg
+export MPLBACKEND=module://matplotlib_inline.backend_inline
 export XDG_CACHE_HOME="$RUNTIME_BASE/cache"
 export JOBLIB_TEMP_FOLDER="$RUNTIME_BASE/joblib"
 mkdir -p \
@@ -147,6 +149,7 @@ fi
 relative="${notebook#"$PROJECT_DIR"/}"
 safe_name="${relative////__}"
 log_file="$LOG_DIR/${safe_name%.ipynb}.log"
+output_name="${safe_name%.ipynb}.executed.ipynb"
 
 cores="${SLURM_CPUS_PER_TASK:-1}"
 
@@ -162,7 +165,9 @@ export NUMEXPR_NUM_THREADS=1
 "${UV_RUN[@]}" jupyter nbconvert \
     --to notebook \
     --execute "$notebook" \
-    --inplace \
+    --output-dir="$OUTPUT_DIR" \
+    --output="$output_name" \
+    --ExecutePreprocessor.cwd="$(dirname "$notebook")" \
     --ExecutePreprocessor.kernel_name=python3 \
     --ExecutePreprocessor.timeout=-1 \
     >"$log_file" 2>&1
