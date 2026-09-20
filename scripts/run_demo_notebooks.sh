@@ -16,11 +16,12 @@
 
 set -euo pipefail
 
-# When run directly, read .env and submit this same script as a Slurm job.
+# When run directly, submit one independent Slurm job per demo notebook.
 if [[ -z "${SLURM_JOB_ID:-}" ]]; then
     SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
     PROJECT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
     JOB_SCRIPT="$SCRIPT_DIR/run_demo_notebooks.sh"
+    NOTEBOOK_DIR="$PROJECT_DIR/demos"
     LOG_DIR="$PROJECT_DIR/logs"
 
     # Slurm must be able to open these paths before the batch script starts.
@@ -36,12 +37,51 @@ if [[ -z "${SLURM_JOB_ID:-}" ]]; then
         exit 1
     fi
 
-    echo "Submitting from project directory: $PROJECT_DIR"
-    exec sbatch \
-        --chdir="$PROJECT_DIR" \
-        --mail-user="$MAIL_USER" \
-        --export=ALL,MINERVACHEM_PROJECT_DIR="$PROJECT_DIR" \
-        "$JOB_SCRIPT" "$@"
+    if ! command -v uv >/dev/null 2>&1; then
+        echo "ERROR: uv is not available for job submission." >&2
+        exit 1
+    fi
+
+    mapfile -t NOTEBOOKS < <(
+        find "$NOTEBOOK_DIR" \
+            -type f \
+            -name '*.ipynb' \
+            -not -path '*/.ipynb_checkpoints/*' \
+            | sort
+    )
+
+    if [[ ${#NOTEBOOKS[@]} -eq 0 ]]; then
+        echo "No notebooks found under $NOTEBOOK_DIR" >&2
+        exit 1
+    fi
+
+    submitted=0
+    for notebook in "${NOTEBOOKS[@]}"; do
+        cores="$(uv run --project "$PROJECT_DIR" python -c '
+import json, re, sys
+with open(sys.argv[1], encoding="utf-8") as handle:
+    notebook = json.load(handle)
+source = "\n".join(
+    "".join(cell.get("source", []))
+    for cell in notebook.get("cells", [])
+    if cell.get("cell_type") == "code"
+)
+print(64 if re.search(r"\bn_jobs\s*=\s*(?!1\b)", source) else 1)
+' "$notebook")"
+
+        echo "Submitting $notebook with $cores CPU(s)"
+        sbatch \
+            --chdir="$PROJECT_DIR" \
+            --mail-user="$MAIL_USER" \
+            --cpus-per-task="$cores" \
+            --mem="${cores}G" \
+            --export=ALL,MINERVACHEM_PROJECT_DIR="$PROJECT_DIR",MINERVACHEM_NOTEBOOK="$notebook" \
+            "$JOB_SCRIPT"
+        submitted=$((submitted + 1))
+    done
+
+    echo "Submitted $submitted independent notebook job(s)."
+    exit 0
 fi
 
 # The project path is explicitly exported by the self-submission above.
@@ -52,17 +92,23 @@ if [[ -z "${MINERVACHEM_PROJECT_DIR:-}" ]]; then
 fi
 
 PROJECT_DIR="$MINERVACHEM_PROJECT_DIR"
-NOTEBOOK_DIR="$PROJECT_DIR/demos"
 LOG_DIR="$PROJECT_DIR/logs"
 UV_RUN=(uv run --project "$PROJECT_DIR")
+
+if [[ -z "${MINERVACHEM_NOTEBOOK:-}" ]]; then
+    echo "ERROR: MINERVACHEM_NOTEBOOK is missing." >&2
+    exit 1
+fi
+
+notebook="$MINERVACHEM_NOTEBOOK"
 
 mkdir -p "$LOG_DIR"
 
 echo "Project directory: $PROJECT_DIR"
-echo "Notebook directory: $NOTEBOOK_DIR"
+echo "Notebook: $notebook"
 
-if [[ ! -d "$NOTEBOOK_DIR" ]]; then
-    echo "ERROR: notebook directory does not exist: $NOTEBOOK_DIR" >&2
+if [[ ! -f "$notebook" ]]; then
+    echo "ERROR: notebook does not exist: $notebook" >&2
     exit 1
 fi
 
@@ -98,82 +144,27 @@ if ! "${UV_RUN[@]}" python -c 'import ipykernel, nbconvert, minervachem' \
     exit 1
 fi
 
-mapfile -t NOTEBOOKS < <(
-    find "$NOTEBOOK_DIR" \
-        -type f \
-        -name '*.ipynb' \
-        -not -path '*/.ipynb_checkpoints/*' \
-        | sort
-)
+relative="${notebook#"$PROJECT_DIR"/}"
+safe_name="${relative////__}"
+log_file="$LOG_DIR/${safe_name%.ipynb}.log"
 
-if [[ ${#NOTEBOOKS[@]} -eq 0 ]]; then
-    echo "No notebooks found under $NOTEBOOK_DIR" >&2
-    exit 1
-fi
+cores="${SLURM_CPUS_PER_TASK:-1}"
 
-# Inspect code cells only. This avoids classifying a notebook from stale output
-# text and avoids requiring ripgrep on the compute node.
-notebook_uses_parallel_jobs() {
-    "${UV_RUN[@]}" python -c '
-import json
-import re
-import sys
+echo "Running $relative with $cores CPU(s)"
 
-with open(sys.argv[1], encoding="utf-8") as handle:
-    notebook = json.load(handle)
+# n_jobs controls joblib workers. Keep each worker's native libraries at
+# one thread to prevent process_count x thread_count oversubscription.
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
 
-source = "\n".join(
-    "".join(cell.get("source", []))
-    for cell in notebook.get("cells", [])
-    if cell.get("cell_type") == "code"
-)
+"${UV_RUN[@]}" jupyter nbconvert \
+    --to notebook \
+    --execute "$notebook" \
+    --inplace \
+    --ExecutePreprocessor.kernel_name=python3 \
+    --ExecutePreprocessor.timeout=-1 \
+    >"$log_file" 2>&1
 
-# n_jobs=1 is serial. Negative values and values greater than one are parallel.
-parallel = re.search(r"\bn_jobs\s*=\s*(?!1\b)", source) is not None
-sys.exit(0 if parallel else 1)
-' "$1"
-}
-
-failures=0
-
-for notebook in "${NOTEBOOKS[@]}"; do
-    relative="${notebook#"$PROJECT_DIR"/}"
-    safe_name="${relative////__}"
-    log_file="$LOG_DIR/${safe_name%.ipynb}.log"
-
-    if notebook_uses_parallel_jobs "$notebook"; then
-        cores=64
-    else
-        cores=1
-    fi
-
-    echo "Running $relative with $cores CPU(s)"
-
-    # n_jobs controls joblib workers. Keep each worker's native libraries at
-    # one thread to prevent process_count x thread_count oversubscription.
-    export OMP_NUM_THREADS=1
-    export MKL_NUM_THREADS=1
-    export OPENBLAS_NUM_THREADS=1
-    export NUMEXPR_NUM_THREADS=1
-
-    if srun --exclusive \
-        --nodes=1 \
-        --ntasks=1 \
-        --cpus-per-task="$cores" \
-        --cpu-bind=cores \
-        "${UV_RUN[@]}" jupyter nbconvert \
-            --to notebook \
-            --execute "$notebook" \
-            --inplace \
-            --ExecutePreprocessor.kernel_name=python3 \
-            --ExecutePreprocessor.timeout=-1 \
-            >"$log_file" 2>&1; then
-        echo "SUCCESS: $relative"
-    else
-        echo "FAILED:  $relative (see $log_file)" >&2
-        failures=$((failures + 1))
-    fi
-done
-
-echo "Completed ${#NOTEBOOKS[@]} notebook(s); failures: $failures"
-exit "$failures"
+echo "SUCCESS: $relative"
