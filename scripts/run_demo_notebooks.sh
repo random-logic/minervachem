@@ -63,6 +63,8 @@ mkdir -p "$LOG_DIR"
 echo "Project directory: $PROJECT_DIR"
 echo "Notebook directory: $NOTEBOOK_DIR"
 
+uv sync --project "$PROJECT_DIR"
+
 if [[ ! -d "$NOTEBOOK_DIR" ]]; then
     echo "ERROR: notebook directory does not exist: $NOTEBOOK_DIR" >&2
     exit 1
