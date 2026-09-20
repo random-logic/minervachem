@@ -9,3 +9,4 @@ build/*
 **/*.pkl
 .gitattributes
 .env
+logs
