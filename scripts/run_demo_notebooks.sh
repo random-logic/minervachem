@@ -54,32 +54,25 @@ fi
 PROJECT_DIR="$MINERVACHEM_PROJECT_DIR"
 NOTEBOOK_DIR="$PROJECT_DIR/demos"
 LOG_DIR="$PROJECT_DIR/logs"
-VENV_DIR="$PROJECT_DIR/.venv"
-PYTHON_BIN="$VENV_DIR/bin/python"
-JUPYTER_BIN="$VENV_DIR/bin/jupyter"
+UV_RUN=(uv run --project "$PROJECT_DIR")
 
 mkdir -p "$LOG_DIR"
 
 echo "Project directory: $PROJECT_DIR"
 echo "Notebook directory: $NOTEBOOK_DIR"
 
-uv sync --project "$PROJECT_DIR"
-
 if [[ ! -d "$NOTEBOOK_DIR" ]]; then
     echo "ERROR: notebook directory does not exist: $NOTEBOOK_DIR" >&2
     exit 1
 fi
 
-if [[ ! -x "$PYTHON_BIN" || ! -x "$JUPYTER_BIN" ]]; then
-    echo "ERROR: the project virtual environment is unavailable or incomplete." >&2
-    echo "Expected executable: $PYTHON_BIN" >&2
-    echo "Expected executable: $JUPYTER_BIN" >&2
+if ! command -v uv >/dev/null 2>&1; then
+    echo "ERROR: uv is not available on the compute node." >&2
     exit 1
 fi
 
-# Ensure nbconvert and every spawned Python kernel use this project's .venv.
-export VIRTUAL_ENV="$VENV_DIR"
-export PATH="$VENV_DIR/bin:$PATH"
+# uv run automatically synchronizes the project environment and selects it for
+# nbconvert and every spawned Python kernel.
 export PYTHONNOUSERSITE=1
 
 # Keep runtime and temporary files on compute-node-local storage.
@@ -98,7 +91,7 @@ mkdir -p \
     "$JOBLIB_TEMP_FOLDER"
 
 # Fail once with a useful diagnostic instead of failing every notebook.
-if ! "$PYTHON_BIN" -c 'import ipykernel, nbconvert, minervachem' \
+if ! "${UV_RUN[@]}" python -c 'import ipykernel, nbconvert, minervachem' \
     2>"$LOG_DIR/environment-check.log"; then
     echo "ERROR: required Python packages cannot be imported on the compute node." >&2
     echo "See $LOG_DIR/environment-check.log" >&2
@@ -121,7 +114,7 @@ fi
 # Inspect code cells only. This avoids classifying a notebook from stale output
 # text and avoids requiring ripgrep on the compute node.
 notebook_uses_parallel_jobs() {
-    "$PYTHON_BIN" -c '
+    "${UV_RUN[@]}" python -c '
 import json
 import re
 import sys
@@ -168,7 +161,7 @@ for notebook in "${NOTEBOOKS[@]}"; do
         --ntasks=1 \
         --cpus-per-task="$cores" \
         --cpu-bind=cores \
-        "$JUPYTER_BIN" nbconvert \
+        "${UV_RUN[@]}" jupyter nbconvert \
             --to notebook \
             --execute "$notebook" \
             --inplace \
