@@ -70,13 +70,26 @@ print(64 if re.search(r"\bn_jobs\s*=\s*(?!1\b)", source) else 1)
 ' "$notebook")"
 
         echo "Submitting $notebook with $cores CPU(s)"
-        sbatch \
+        submission="$(sbatch --parsable \
             --chdir="$PROJECT_DIR" \
             --mail-user="$MAIL_USER" \
+            --mail-type=BEGIN,END,FAIL \
             --cpus-per-task="$cores" \
             --mem="${cores}G" \
             --export=ALL,MINERVACHEM_PROJECT_DIR="$PROJECT_DIR",MINERVACHEM_NOTEBOOK="$notebook" \
-            "$JOB_SCRIPT"
+            "$JOB_SCRIPT")"
+        job_id="${submission%%;*}"
+        echo "Submitted job $job_id"
+
+        if command -v scontrol >/dev/null 2>&1; then
+            job_settings="$(scontrol show job -o "$job_id" 2>/dev/null || true)"
+            if [[ "$job_settings" == *"MailUser=$MAIL_USER"* ]] && [[ "$job_settings" == *"MailType="* ]]; then
+                echo "Verified Slurm mail settings for job $job_id"
+            else
+                echo "WARNING: Slurm did not report the requested mail settings for job $job_id" >&2
+                echo "WARNING: $job_settings" >&2
+            fi
+        fi
         submitted=$((submitted + 1))
     done
 
