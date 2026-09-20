@@ -57,7 +57,7 @@ if [[ -z "${SLURM_JOB_ID:-}" ]]; then
 
     submitted=0
     for notebook in "${NOTEBOOKS[@]}"; do
-        cores="$(uv run --project "$PROJECT_DIR" python -c '
+        cores="$(uv run --project "$PROJECT_DIR" --all-extras python -c '
 import json, re, sys
 with open(sys.argv[1], encoding="utf-8") as handle:
     notebook = json.load(handle)
@@ -107,7 +107,7 @@ fi
 PROJECT_DIR="$MINERVACHEM_PROJECT_DIR"
 LOG_DIR="$PROJECT_DIR/logs"
 OUTPUT_DIR="$PROJECT_DIR/executed_notebooks"
-UV_RUN=(uv run --project "$PROJECT_DIR")
+UV_RUN=(uv run --project "$PROJECT_DIR" --all-extras)
 
 if [[ -z "${MINERVACHEM_NOTEBOOK:-}" ]]; then
     echo "ERROR: MINERVACHEM_NOTEBOOK is missing." >&2
