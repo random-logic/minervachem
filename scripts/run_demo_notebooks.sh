@@ -7,21 +7,23 @@
 #SBATCH --account=w26_pfas_g
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=64
-#SBATCH --mem-per-cpu=1G
+#SBATCH --mem=64G
 #SBATCH --gpus-per-node=0
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --no-requeue
-#SBATCH --signal=23@60
 #SBATCH --output=logs/demo-notebooks-%j.out
 #SBATCH --error=logs/demo-notebooks-%j.err
 
-set -uo pipefail
+set -euo pipefail
 
+# When run directly, read .env and submit this same script as a Slurm job.
 if [[ -z "${SLURM_JOB_ID:-}" ]]; then
     SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
     PROJECT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+    JOB_SCRIPT="$SCRIPT_DIR/run_demo_notebooks.sh"
     LOG_DIR="$PROJECT_DIR/logs"
 
+    # Slurm must be able to open these paths before the batch script starts.
     mkdir -p "$LOG_DIR"
 
     if [[ -f "$PROJECT_DIR/.env" ]]; then
@@ -35,18 +37,26 @@ if [[ -z "${SLURM_JOB_ID:-}" ]]; then
     fi
 
     echo "Submitting from project directory: $PROJECT_DIR"
-
     exec sbatch \
         --chdir="$PROJECT_DIR" \
         --mail-user="$MAIL_USER" \
         --export=ALL,MINERVACHEM_PROJECT_DIR="$PROJECT_DIR" \
-        "$0" "$@"
+        "$JOB_SCRIPT" "$@"
 fi
 
-# Inside Slurm, use the original project directory passed during submission.
+# The project path is explicitly exported by the self-submission above.
+if [[ -z "${MINERVACHEM_PROJECT_DIR:-}" ]]; then
+    echo "ERROR: MINERVACHEM_PROJECT_DIR is missing." >&2
+    echo "Run this script directly: ./scripts/run_demo_notebooks.sh" >&2
+    exit 1
+fi
+
 PROJECT_DIR="$MINERVACHEM_PROJECT_DIR"
 NOTEBOOK_DIR="$PROJECT_DIR/demos"
 LOG_DIR="$PROJECT_DIR/logs"
+VENV_DIR="$PROJECT_DIR/.venv"
+PYTHON_BIN="$VENV_DIR/bin/python"
+JUPYTER_BIN="$VENV_DIR/bin/jupyter"
 
 mkdir -p "$LOG_DIR"
 
@@ -55,6 +65,41 @@ echo "Notebook directory: $NOTEBOOK_DIR"
 
 if [[ ! -d "$NOTEBOOK_DIR" ]]; then
     echo "ERROR: notebook directory does not exist: $NOTEBOOK_DIR" >&2
+    exit 1
+fi
+
+if [[ ! -x "$PYTHON_BIN" || ! -x "$JUPYTER_BIN" ]]; then
+    echo "ERROR: the project virtual environment is unavailable or incomplete." >&2
+    echo "Expected executable: $PYTHON_BIN" >&2
+    echo "Expected executable: $JUPYTER_BIN" >&2
+    exit 1
+fi
+
+# Ensure nbconvert and every spawned Python kernel use this project's .venv.
+export VIRTUAL_ENV="$VENV_DIR"
+export PATH="$VENV_DIR/bin:$PATH"
+export PYTHONNOUSERSITE=1
+
+# Keep runtime and temporary files on compute-node-local storage.
+RUNTIME_BASE="${SLURM_TMPDIR:-/tmp}/minervachem-${SLURM_JOB_ID}"
+export JUPYTER_RUNTIME_DIR="$RUNTIME_BASE/jupyter"
+export IPYTHONDIR="$RUNTIME_BASE/ipython"
+export MPLCONFIGDIR="$RUNTIME_BASE/matplotlib"
+export MPLBACKEND=Agg
+export XDG_CACHE_HOME="$RUNTIME_BASE/cache"
+export JOBLIB_TEMP_FOLDER="$RUNTIME_BASE/joblib"
+mkdir -p \
+    "$JUPYTER_RUNTIME_DIR" \
+    "$IPYTHONDIR" \
+    "$MPLCONFIGDIR" \
+    "$XDG_CACHE_HOME" \
+    "$JOBLIB_TEMP_FOLDER"
+
+# Fail once with a useful diagnostic instead of failing every notebook.
+if ! "$PYTHON_BIN" -c 'import ipykernel, nbconvert, minervachem' \
+    2>"$LOG_DIR/environment-check.log"; then
+    echo "ERROR: required Python packages cannot be imported on the compute node." >&2
+    echo "See $LOG_DIR/environment-check.log" >&2
     exit 1
 fi
 
@@ -71,6 +116,29 @@ if [[ ${#NOTEBOOKS[@]} -eq 0 ]]; then
     exit 1
 fi
 
+# Inspect code cells only. This avoids classifying a notebook from stale output
+# text and avoids requiring ripgrep on the compute node.
+notebook_uses_parallel_jobs() {
+    "$PYTHON_BIN" -c '
+import json
+import re
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    notebook = json.load(handle)
+
+source = "\n".join(
+    "".join(cell.get("source", []))
+    for cell in notebook.get("cells", [])
+    if cell.get("cell_type") == "code"
+)
+
+# n_jobs=1 is serial. Negative values and values greater than one are parallel.
+parallel = re.search(r"\bn_jobs\s*=\s*(?!1\b)", source) is not None
+sys.exit(0 if parallel else 1)
+' "$1"
+}
+
 failures=0
 
 for notebook in "${NOTEBOOKS[@]}"; do
@@ -78,7 +146,7 @@ for notebook in "${NOTEBOOKS[@]}"; do
     safe_name="${relative////__}"
     log_file="$LOG_DIR/${safe_name%.ipynb}.log"
 
-    if rg -q -i 'n_jobs[[:space:]]*=' "$notebook"; then
+    if notebook_uses_parallel_jobs "$notebook"; then
         cores=64
     else
         cores=1
@@ -86,20 +154,23 @@ for notebook in "${NOTEBOOKS[@]}"; do
 
     echo "Running $relative with $cores CPU(s)"
 
-    export OMP_NUM_THREADS="$cores"
-    export MKL_NUM_THREADS="$cores"
-    export OPENBLAS_NUM_THREADS="$cores"
-    export NUMEXPR_NUM_THREADS="$cores"
+    # n_jobs controls joblib workers. Keep each worker's native libraries at
+    # one thread to prevent process_count x thread_count oversubscription.
+    export OMP_NUM_THREADS=1
+    export MKL_NUM_THREADS=1
+    export OPENBLAS_NUM_THREADS=1
+    export NUMEXPR_NUM_THREADS=1
 
     if srun --exclusive \
         --nodes=1 \
         --ntasks=1 \
         --cpus-per-task="$cores" \
         --cpu-bind=cores \
-        jupyter nbconvert \
+        "$JUPYTER_BIN" nbconvert \
             --to notebook \
             --execute "$notebook" \
             --inplace \
+            --ExecutePreprocessor.kernel_name=python3 \
             --ExecutePreprocessor.timeout=-1 \
             >"$log_file" 2>&1; then
         echo "SUCCESS: $relative"
