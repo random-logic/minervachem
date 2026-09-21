@@ -23,7 +23,7 @@ readme = "README.md"
 requires-python = ">=3.11,<3.12"
 dependencies = [
     "minervachem>0.0.2,<1",
-    "xgboost",
+    "xgboost>=3.2.0,<4",
 ]
 
 [tool.setuptools]
