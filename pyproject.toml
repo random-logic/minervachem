@@ -67,6 +67,7 @@ dev = [
     "coverage>=5.5,<8.0",
     "PyTDC",
     "setuptools>=61,<82",
+    "xgboost",
 ]
 
 [tool.pytest.ini_options]
