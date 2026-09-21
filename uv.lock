@@ -1325,14 +1325,17 @@ provides-extras = ["lamel", "dev"]
 
 [[package]]
 name = "minervachem-lamel"
-version = "0.1.0"
 source = { editable = "lamel" }
 dependencies = [
     { name = "minervachem" },
+    { name = "xgboost" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "minervachem", editable = "." }]
+requires-dist = [
+    { name = "minervachem", editable = "." },
+    { name = "xgboost" },
+]
 
 [[package]]
 name = "mistune"
