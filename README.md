@@ -9,30 +9,9 @@ keep track of what version you are using if you need to maintain consistency.
 
 1. Clone this repo and `cd` into it
 2. `uv sync --all-extras`
-3. Choose one:
-    - `source .venv/bin/activate` (Linux / MacOS)
-    - `.venv\Scripts\activate.bat` (Windows)
 
-### Optional LAMEL add-on
-
-LAMEL is maintained as a separate package in this repository. To install it
-alongside MinervaChem from this checkout, run:
-
-```sh
-uv sync --extra lamel
-```
-
-Published releases support the equivalent pip command:
-
-```sh
-pip install "minervachem[lamel]"
-```
-
-The add-on is imported separately:
-
-```python
-from lamel import MetaLearner
-```
+## Optional Add-ons
+* [LAMEL](https://github.com/random-logic/minervachem/tree/main/lamel#readme)
 
 # Getting started with `minervachem`
 
