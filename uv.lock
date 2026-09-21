@@ -2,6 +2,12 @@ version = 1
 revision = 3
 requires-python = "==3.11.*"
 
+[manifest]
+members = [
+    "minervachem",
+    "minervachem-lamel",
+]
+
 [[package]]
 name = "annotated-types"
 version = "0.8.0"
@@ -1277,6 +1283,9 @@ dev = [
     { name = "setuptools" },
     { name = "xgboost" },
 ]
+lamel = [
+    { name = "minervachem-lamel" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -1293,6 +1302,7 @@ requires-dist = [
     { name = "jupyterlab" },
     { name = "lightgbm" },
     { name = "matplotlib" },
+    { name = "minervachem-lamel", marker = "extra == 'lamel'", editable = "lamel" },
     { name = "networkx" },
     { name = "numpy" },
     { name = "pandas" },
@@ -1311,7 +1321,18 @@ requires-dist = [
     { name = "tqdm" },
     { name = "xgboost", marker = "extra == 'dev'" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["lamel", "dev"]
+
+[[package]]
+name = "minervachem-lamel"
+version = "0.1.0"
+source = { editable = "lamel" }
+dependencies = [
+    { name = "minervachem" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "minervachem", editable = "." }]
 
 [[package]]
 name = "mistune"

@@ -21,8 +21,8 @@ from scipy.sparse import csr_matrix, vstack
 # from minervachem.plotting import parity_plot_train_test
 from minervachem.regressors import HierarchicalResidualModel
 
-from dataset_loader import LoadedDataset
-from lamel_utilities import *
+from .dataset_loader import LoadedDataset
+from .lamel_utilities import *
 
 
 

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61,<82"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minervachem-lamel"
+version = "0.0.1a"
+description = "LAMEL add-on for MinervaChem"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "minervachem>0.0.2,<1",
+]
+
+[tool.setuptools]
+packages = ["lamel"]
+package-dir = { lamel = "." }

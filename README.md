@@ -13,6 +13,27 @@ keep track of what version you are using if you need to maintain consistency.
     - `source .venv/bin/activate` (Linux / MacOS)
     - `.venv\Scripts\activate.bat` (Windows)
 
+### Optional LAMEL add-on
+
+LAMEL is maintained as a separate package in this repository. To install it
+alongside MinervaChem from this checkout, run:
+
+```sh
+uv sync --extra lamel
+```
+
+Published releases support the equivalent pip command:
+
+```sh
+pip install "minervachem[lamel]"
+```
+
+The add-on is imported separately:
+
+```python
+from lamel import MetaLearner
+```
+
 # Getting started with `minervachem`
 
 We recommend looking through and running the notebooks in the `demos/` directory for a detailed introduction to `minervachem`'s funcitonality.
