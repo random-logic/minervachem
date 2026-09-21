@@ -57,25 +57,45 @@ if [[ -z "${SLURM_JOB_ID:-}" ]]; then
 
     submitted=0
     for notebook in "${NOTEBOOKS[@]}"; do
-        cores="$(uv run --project "$PROJECT_DIR" --all-extras python -c '
-import json, re, sys
+        resources="$(uv run --project "$PROJECT_DIR" --all-extras python -c '
+import json
+import re
+import sys
+
 with open(sys.argv[1], encoding="utf-8") as handle:
     notebook = json.load(handle)
-source = "\n".join(
-    "".join(cell.get("source", []))
-    for cell in notebook.get("cells", [])
-    if cell.get("cell_type") == "code"
-)
-print(64 if re.search(r"\bn_jobs\s*=\s*(?!1\b)", source) else 1)
-' "$notebook")"
 
-        echo "Submitting $notebook with $cores CPU(s)"
+first_markdown = next(
+    (
+        "".join(cell.get("source", []))
+        for cell in notebook.get("cells", [])
+        if cell.get("cell_type") == "markdown"
+    ),
+    "",
+)
+match = re.search(
+    r"<!--\s*HPC_RESOURCES:\s*cpus=(\d+)\s+mem=(\d+[KMGTP])\s*-->",
+    first_markdown,
+)
+if match is None:
+    sys.exit("missing HPC_RESOURCES marker in the first Markdown cell")
+
+print(f"{match.group(1)} {match.group(2)}")
+' "$notebook")"
+        read -r cores memory <<< "$resources"
+
+        if [[ ! "$cores" =~ ^[1-9][0-9]*$ ]] || [[ ! "$memory" =~ ^[1-9][0-9]*[KMGTP]$ ]]; then
+            echo "ERROR: invalid HPC_RESOURCES marker in $notebook: $resources" >&2
+            exit 1
+        fi
+
+        echo "Submitting $notebook with $cores CPU(s), $memory RAM"
         submission="$(sbatch --parsable \
             --chdir="$PROJECT_DIR" \
             --mail-user="$MAIL_USER" \
             --mail-type=BEGIN,END,FAIL \
             --cpus-per-task="$cores" \
-            --mem="${cores}G" \
+            --mem="$memory" \
             --export=ALL,MINERVACHEM_PROJECT_DIR="$PROJECT_DIR",MINERVACHEM_NOTEBOOK="$notebook" \
             "$JOB_SCRIPT")"
         job_id="${submission%%;*}"
@@ -175,14 +195,16 @@ export MKL_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 
-"${UV_RUN[@]}" jupyter nbconvert \
-    --to notebook \
-    --execute "$notebook" \
-    --output-dir="$OUTPUT_DIR" \
-    --output="$output_name" \
-    --ExecutePreprocessor.cwd="$(dirname "$notebook")" \
-    --ExecutePreprocessor.kernel_name=python3 \
-    --ExecutePreprocessor.timeout=-1 \
-    >"$log_file" 2>&1
+(
+    cd "$(dirname "$notebook")"
+    "${UV_RUN[@]}" jupyter nbconvert \
+        --to notebook \
+        --execute "$(basename "$notebook")" \
+        --output-dir="$OUTPUT_DIR" \
+        --output="$output_name" \
+        --ExecutePreprocessor.kernel_name=python3 \
+        --ExecutePreprocessor.timeout=-1 \
+        >"$log_file" 2>&1
+)
 
 echo "SUCCESS: $relative"
