@@ -5,6 +5,16 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "minervachem-lamel"
 dynamic = ["version"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Software Development :: Libraries",
+]
 description = "LAMEL add-on for MinervaChem"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
