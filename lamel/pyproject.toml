@@ -1,7 +1,7 @@
 [build-system]
 requires = [
-    "setuptools>=80,<82",
-    "setuptools-scm[simple]>=9.2,<10",
+    "setuptools>=61,<82",
+    "setuptools-scm[simple]>=9.2",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -28,3 +28,10 @@ dependencies = [
 [tool.setuptools]
 packages = ["lamel"]
 package-dir = { lamel = "." }
+
+[tool.setuptools_scm]
+root = ".."
+
+[tool.setuptools_scm.tag]
+prefix = "lamel-v"
+strict = true
