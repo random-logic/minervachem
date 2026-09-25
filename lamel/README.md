@@ -21,6 +21,29 @@ Import its public API separately from the core package:
 from lamel import MetaLearner
 ```
 
+## scikit-learn and MAPIE
+
+`LAMELRegressor` uses support tasks from the LAMEL dataset while its `fit`
+method learns from the target-task `X_train, y_train` you supply. All feature
+matrices must be LAMEL Graphlet fingerprints made with the same dataset and
+`max_subgraph_size`.
+
+```python
+from lamel import LAMELRegressor
+from mapie.regression import SplitConformalRegressor
+
+estimator = LAMELRegressor(
+    database_path="support_tasks.csv",
+    target_task="target_property",
+    support_tasks=["property_a", "property_b"],
+    max_subgraph_size=5,
+)
+model = SplitConformalRegressor(estimator=estimator, confidence_level=0.95)
+model.fit(X_train, y_train)
+model.conformalize(X_cal, y_cal)
+y_pred, y_interval = model.predict_interval(X_test)
+```
+
 ## Citation
 If you use LAMeL in your work, please cite [our paper](https://arxiv.org/abs/2509.13527).
 
