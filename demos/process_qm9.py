@@ -23,6 +23,7 @@ The script takes approximately 1 minute to run. When complete, you should now ha
 
 """
 import tarfile
+from pathlib import Path
 import pandas as pd
 import numpy as np
 from rdkit.Chem import MolFromSmiles, AddHs
@@ -34,7 +35,7 @@ HARTREE_TO_KCAL = 627.50947406
 
 def read_qm9_file(tardata, file):
     """Extracts computed quantities and smiles string from single tarfile element in qm9 archive"""
-    with tardata.extractfile(file) as data: 
+    with tardata.extractfile(file) as data:
         lines = data.readlines()
     vals = (lines[1].decode()
         .replace('gdb ', '')
@@ -47,16 +48,16 @@ def read_qm9_file(tardata, file):
 def count_elements(mol):
     """Return a dict of CHNOF counts in an rdkit molecule"""
     counts = {s: 0 for s in 'CHNOF'}
-    for atom in mol.GetAtoms(): 
+    for atom in mol.GetAtoms():
         symbol = atom.GetSymbol()
         counts[symbol] += 1
     return dict(counts)
 
-def read_qm9_txt_row(row): 
+def read_qm9_txt_row(row):
     return re.split('[\ ]{2,}', row.strip(' #\n'))
 
-def read_qm9_txt_file(file, header_row=2, data_start_row=5): 
-    with open(file, 'r') as f: 
+def read_qm9_txt_file(file, header_row=2, data_start_row=5):
+    with open(file, 'r') as f:
         lines = f.readlines()
     headers = read_qm9_txt_row(lines[header_row])
     data = [read_qm9_txt_row(r) for r in lines[data_start_row:-1]]
@@ -64,52 +65,52 @@ def read_qm9_txt_file(file, header_row=2, data_start_row=5):
 
 
 
-qm9_colnames = ['smiles', 
-            'i', 
-            'A', 
-            'B', 
-            'C', 
-            'mu', 
-            'alpha', 
-            'e_homo', 
-            'e_lumo', 
-            'e_gap', 
-            'E_R^2', 
-            'zpve', 
-            'U_0', 
+qm9_colnames = ['smiles',
+            'i',
+            'A',
+            'B',
+            'C',
+            'mu',
+            'alpha',
+            'e_homo',
+            'e_lumo',
+            'e_gap',
+            'E_R^2',
+            'zpve',
+            'U_0',
             'U',
-            'H', 
+            'H',
             'G',
             'C_v']
 
 qm9_dtypes = {'smiles': str,
-          'i': int, 
-          'A': float, 
-          'B': float, 
-          'C': float, 
-          'mu': float, 
-          'alpha': float, 
-          'e_homo': float, 
-          'e_lumo': float, 
-          'e_gap': float, 
-          'E_R^2': float, 
-          'zpve': float, 
-          'U_0': float, 
-          'U': float, 
-          'H': float, 
-          'G': float, 
-          'C_v': float, 
+          'i': int,
+          'A': float,
+          'B': float,
+          'C': float,
+          'mu': float,
+          'alpha': float,
+          'e_homo': float,
+          'e_lumo': float,
+          'e_gap': float,
+          'E_R^2': float,
+          'zpve': float,
+          'U_0': float,
+          'U': float,
+          'H': float,
+          'G': float,
+          'C_v': float,
 }
 
 if __name__ == "__main__":
-    data_dir = './qm9_data_files'
+    data_dir = Path(__file__).resolve().parent / 'qm9_data_files'
     # Read every file in the tar archive
-    with tarfile.open(f'{data_dir}/dsgdb9nsd.xyz.tar.bz2', 'r') as tardata: 
+    with tarfile.open(f'{data_dir}/dsgdb9nsd.xyz.tar.bz2', 'r') as tardata:
         files = tardata.getmembers()
-        qm9 = [read_qm9_file(tardata, f) for f in tqdm(files, 'reading qm9 files')]  
+        qm9 = [read_qm9_file(tardata, f) for f in tqdm(files, 'reading qm9 files')]
 
-    qm9_df = (pd.DataFrame.from_records(qm9, 
-                                        columns=qm9_colnames, 
+    qm9_df = (pd.DataFrame.from_records(qm9,
+                                        columns=qm9_colnames,
                                         coerce_float=True)
             .astype(qm9_dtypes))
 
@@ -145,5 +146,5 @@ if __name__ == "__main__":
     qm9_df = qm9_df.iloc[~drop_mask, :]
 
     # save
-    qm9_df.drop(['mol', 'mol_H'], axis=1).to_csv('qm9_processed.csv')
+    qm9_df.drop(['mol', 'mol_H'], axis=1).to_csv(Path(__file__).resolve().parent / 'qm9_processed.csv')
     print("All done!")

@@ -17,17 +17,27 @@ keep track of what version you are using if you need to maintain consistency.
 
 We recommend looking through and running the notebooks in the `demos/` directory for a detailed introduction to `minervachem`'s funcitonality.
 
-## Running Reddit Demo
+## Graph and chemistry examples
 
-### Graphlets
+The Reddit graph classification example and enumeration benchmark live in
+[Buhito](https://github.com/lanl/buhito/tree/main/examples/reddit_example). They use graph structure
+only and require no MinervaChem or RDKit. MinervaChem depends on Buhito for the
+underlying graph algorithms; Buhito does not depend on MinervaChem.
+
+The SMILES converter is available as `minervachem.converters.smiles_to_nx`.
+The QM9 chemical-property benchmark lives here:
+
 ```sh
-uv run python demos/reddit_example/reddit_graphlets_example.py
+uv run python demos/qm9/benchmark_graphlet_featurizers_train_test.py \
+  --data demos/qm9/qm9data/qm9_processed.csv \
+  --max-len 2 3 4 5 6 --repeats 3 --n-jobs -1 --outdir bench_qm9
 ```
 
-### Benchmark
-```sh
-uv run python demos/reddit_example/reddit_individual_graphs_benchmark.py demos/reddit_example/reddit_graphs_benchmarks
-```
+See [demo and HPC scripts](scripts/README.md) for running every demo, selecting
+a single demo, and updating notebook outputs in place. Keep the Buhito checkout
+at `../buhito`; `uv` uses that editable source during development. General ML
+implementations live in Buhito; existing MinervaChem imports remain compatible.
+The synthetic PADRE notebook is now in Buhito under `examples/padre/`.
 
 ## Highlights
 
@@ -42,7 +52,7 @@ from minervachem.fingerprinters import GraphletFingerprinter
 # Benzene
 mol = AddHs(MolFromSmiles('c1ccccc1'))
 
-# Reusable Fingerprinter object 
+# Reusable Fingerprinter object
 fingerprinter = GraphletFingerprinter(max_len=3)
 
 # Fingerprints are a map from fragment IDs to fragment counts.
@@ -77,7 +87,7 @@ mols = [MolFromSmiles(s) for s in [
 ]]
 
 featurizer = FingerprintFeaturizer(
-    fingerprinter, 
+    fingerprinter,
     n_jobs=2 # parallelism for large datasets
 )
 
@@ -94,9 +104,9 @@ feature_matrix
 ### Building Interpretable Machine Learning Models
 #### Model fitting
 
-After constructing a dataset through the methods above, we can use `minervachem` to fit an interpretable ML model. 
+After constructing a dataset through the methods above, we can use `minervachem` to fit an interpretable ML model.
 
-The below is a snippet from the demo notebook which fits a hierarchical linear model with ~6,000 coefficients to ~100,000 molecules from QM9. 
+The below is a snippet from the demo notebook which fits a hierarchical linear model with ~6,000 coefficients to ~100,000 molecules from QM9.
 
 ```python
 import minervachem
@@ -106,28 +116,28 @@ from minervachem.plotting import parity_plot_train_test
 
 
 # build a higherarchical residual model
-# using a ridge regressor base model 
-base_model = Ridge(fit_intercept=False, 
+# using a ridge regressor base model
+base_model = Ridge(fit_intercept=False,
                    alpha=1e-5,
                    solver='sparse_cg')
 hmodel = HierarchicalResidualModel(regressor=base_model,verbose=1)
 hmodel.fit(X_train,y_train,levels=featurizer.bit_sizes_)
 
-# visualize the train and test performance with 
+# visualize the train and test performance with
 # minervachem's plotting methods
-parity_plot_train_test([X_train, X_test], 
+parity_plot_train_test([X_train, X_test],
                        [y_train, y_test],
-                       hmodel, 
+                       hmodel,
                        figsize=(12, 4),
-                       xlab='DFT (kcal/mol)', 
-                       ylab='Linear Model (kcal/mol)', 
-                       title='Hierarchical Model Prediction');   
+                       xlab='DFT (kcal/mol)',
+                       ylab='Linear Model (kcal/mol)',
+                       title='Hierarchical Model Prediction');
 ```
 ![Hierarchical model performance](https://raw.githubusercontent.com/lanl/minervachem/main/demos/hmodel_perf.png)
 
 
 #### Model interpretations
-Linear models are interpretable, but 6,000 coefficients is too many to look at all at once. (The most accurate models in our manuscript had >100,000 coefficients.) So, we use `minervachem`'s projection methods to visualize atom- or bond-level contributions to model predictions for a set of molecules. 
+Linear models are interpretable, but 6,000 coefficients is too many to look at all at once. (The most accurate models in our manuscript had >100,000 coefficients.) So, we use `minervachem`'s projection methods to visualize atom- or bond-level contributions to model predictions for a set of molecules.
 
 First we construct the Directed-Acyclic-Graph (DAG) between molecular graphlets that defines our projection operation:
 
@@ -152,7 +162,7 @@ draw_projected_coefs(dags,
 ![Hierarhcical model interpretation](https://raw.githubusercontent.com/lanl/minervachem/main/demos/hmodel_interp.png)
 
 
-## Citation 
+## Citation
 If you use minervachem in your work, please cite [our paper](https://doi.org/10.26434/chemrxiv-2024-r81c8)
 
 ```latex

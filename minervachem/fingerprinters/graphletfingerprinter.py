@@ -3,9 +3,9 @@ import re
 import networkx as nx
 from collections import defaultdict
 from buhito.depth_graphlet import (
-    HashHelper,
+    HashHelper as _GraphHashHelper,
     active_neighbors,
-    generate_subgraphs_depthwise,
+    generate_subgraphs_depthwise as _generate_subgraphs_depthwise,
     generate_subgraphs_from_node,
     search_subgraphs_from_cluster,
 )
@@ -16,15 +16,27 @@ import rdkit
 
 # Backwards-compatible name for Minervachem callers. The graphlet enumeration
 # and recursive hashing implementation now lives in Buhito.
-generate_subgraphs = generate_subgraphs_depthwise
+class HashHelper(_GraphHashHelper):
+    def __init__(self, graph, maxlen):
+        super().__init__(graph, maxlen, node_key="atom_key", edge_key="bond_key")
 
 
-class GraphletFingerprinter():     
+def generate_subgraphs(G, maxlen, hash_helper=None, whitelist=None):
+    return _generate_subgraphs_depthwise(
+        G, maxlen, hash_helper=hash_helper, whitelist=whitelist,
+        node_key="atom_key", edge_key="bond_key",
+    )
+
+
+generate_subgraphs_depthwise = generate_subgraphs
+
+
+class GraphletFingerprinter():
     def __init__(self, max_len=3, useHs=False, elements=(), filter_in=True, terminal_pos=False):
         """A class to produce graphlet fingerprints
 
-        The size component of the bit ID corresponds to the number of atoms in the graphlet. 
-        
+        The size component of the bit ID corresponds to the number of atoms in the graphlet.
+
         :param max_len: int, the largest number of atoms to consider for induced subgraphs
         :param useHs: bool, whether to use explicit hydrogens
         :param elements: tuple of str, the elements to filter for
@@ -32,7 +44,7 @@ class GraphletFingerprinter():
         False if substructures with filtered elements should be removed
         :param terminal_pos: bool, True if substructures with terminal atoms should be kept,
         """
-        
+
         self.size = self.max_len = max_len
         self.useHs = useHs
         self.elements = elements
@@ -42,9 +54,9 @@ class GraphletFingerprinter():
 
         if len(self.elements)==0:
             print('No elements to filter. Complete fingerprints are returned.') #should only appear once at the initialization
-        
-    def __call__(self, mol): 
-        fp, bi = ComputeGraphletFingerprint(mol, 
+
+    def __call__(self, mol):
+        fp, bi = ComputeGraphletFingerprint(mol,
                                             self.max_len,
                                             self.useHs,
                                             self.elements,
@@ -52,7 +64,7 @@ class GraphletFingerprinter():
                                             self.terminal_pos,
                                             self.verbose)
         return fp, bi
-    
+
 
 
 def akey_noH(atom):
@@ -60,7 +72,7 @@ def akey_noH(atom):
 
 def akey_withH(atom):
     return (atom.GetAtomicNum(),atom.GetFormalCharge())
-    
+
 def mol_to_nx(mol,explicit_h=False):
     """
     Modified from:
@@ -71,7 +83,7 @@ def mol_to_nx(mol,explicit_h=False):
         mol=rdmolops.AddHs(mol)
         akey = akey_withH
     else:
-        akey = akey_noH 
+        akey = akey_noH
     for atom in mol.GetAtoms():
         G.add_node(atom.GetIdx(),
                    atom_key=akey(atom))
@@ -82,13 +94,13 @@ def mol_to_nx(mol,explicit_h=False):
     return G
 
 def _guess_element(atom_name: str, atom_type: str | None) -> str | None:
-    elements = ('X', 'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 
-                'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 
-                'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 
-                'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 
-                'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re', 
-                'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 
-                'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 
+    elements = ('X', 'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P',
+                'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
+                'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh',
+                'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd',
+                'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re',
+                'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th',
+                'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db',
                 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og')
     if atom_type:
         t0 = atom_type.split('.')[0]
@@ -117,7 +129,7 @@ def _bond_order_and_flags(bond_type: str | None):
     return order, aromatic
 
 def mol2_to_nx(mol2str, explicit_h=False):
-    """mol2_to_nx 
+    """mol2_to_nx
     Take in a mol2string and return a networkx version of the molecular graph.
     By default uses heavy elements only.
 

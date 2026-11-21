@@ -1,1 +1,4 @@
-from .padre import PADRERegressor
+"""Compatibility imports from Buhito."""
+from buhito.padre import (
+    PADRERegressor,
+)

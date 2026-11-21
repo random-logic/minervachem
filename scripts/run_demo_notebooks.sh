@@ -126,7 +126,6 @@ fi
 
 PROJECT_DIR="$MINERVACHEM_PROJECT_DIR"
 LOG_DIR="$PROJECT_DIR/logs"
-OUTPUT_DIR="$PROJECT_DIR/executed_notebooks"
 UV_RUN=(uv run --project "$PROJECT_DIR" --all-extras)
 
 if [[ -z "${MINERVACHEM_NOTEBOOK:-}" ]]; then
@@ -137,7 +136,6 @@ fi
 notebook="$MINERVACHEM_NOTEBOOK"
 
 mkdir -p "$LOG_DIR"
-mkdir -p "$OUTPUT_DIR"
 
 echo "Project directory: $PROJECT_DIR"
 echo "Notebook: $notebook"
@@ -182,7 +180,6 @@ fi
 relative="${notebook#"$PROJECT_DIR"/}"
 safe_name="${relative////__}"
 log_file="$LOG_DIR/${safe_name%.ipynb}.log"
-output_name="${safe_name%.ipynb}.executed.ipynb"
 
 cores="${SLURM_CPUS_PER_TASK:-1}"
 
@@ -200,8 +197,7 @@ export NUMEXPR_NUM_THREADS=1
     "${UV_RUN[@]}" jupyter nbconvert \
         --to notebook \
         --execute "$(basename "$notebook")" \
-        --output-dir="$OUTPUT_DIR" \
-        --output="$output_name" \
+        --inplace \
         --ExecutePreprocessor.kernel_name=python3 \
         --ExecutePreprocessor.timeout=-1 \
         >"$log_file" 2>&1

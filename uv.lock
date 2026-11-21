@@ -186,8 +186,7 @@ css = [
 
 [[package]]
 name = "buhito"
-version = "0.0.1a1"
-source = { registry = "https://pypi.org/simple" }
+source = { editable = "../buhito" }
 dependencies = [
     { name = "joblib" },
     { name = "matplotlib" },
@@ -197,15 +196,54 @@ dependencies = [
     { name = "pandas" },
     { name = "pillow" },
     { name = "pydot" },
-    { name = "rdkit" },
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2d/a2/745952078f7004bb04fba26944cae264a27fb05a66f2a69a40d102a15d78/buhito-0.0.1a1.tar.gz", hash = "sha256:78258fd62e9cbbd0b7cc135aefd7cca849f51a21252fb6a84eff40b6a3aa3f4b", size = 10933410, upload-time = "2026-09-19T01:07:09.892Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/7f/a5/28605fbc3e0838cbc35c64638a6210071aed1eb0f48f3014f81453f05bce/buhito-0.0.1a1-py3-none-any.whl", hash = "sha256:042b307462e0dd6751de7a6a7531a810e938fd4037f3cffae7bb0e957f5255ee", size = 21980, upload-time = "2026-09-19T01:07:08.049Z" },
+
+[package.optional-dependencies]
+ml = [
+    { name = "dask", extra = ["array"] },
+    { name = "distributed" },
+    { name = "flaml" },
+    { name = "lightgbm" },
+    { name = "seaborn" },
+    { name = "sigfig" },
+    { name = "sparse" },
 ]
+
+[package.metadata]
+requires-dist = [
+    { name = "dask", extras = ["array"], marker = "extra == 'ml'", specifier = ">=2023.1" },
+    { name = "distributed", marker = "extra == 'ml'", specifier = ">=2023.1" },
+    { name = "flaml", marker = "extra == 'ml'", specifier = ">=2.6,<3" },
+    { name = "graphviz", marker = "extra == 'demos'" },
+    { name = "graphviz", marker = "extra == 'full'" },
+    { name = "ipykernel", marker = "extra == 'demos'", specifier = ">=6,<8" },
+    { name = "joblib", specifier = ">=1.2.0,<2.0" },
+    { name = "jupyterlab", marker = "extra == 'demos'", specifier = ">=4,<5" },
+    { name = "lightgbm", marker = "extra == 'ml'", specifier = ">=4.7,<5" },
+    { name = "matplotlib", specifier = ">=3.6.0,<4.0" },
+    { name = "nbconvert", marker = "extra == 'demos'", specifier = ">=7,<8" },
+    { name = "networkx", specifier = ">=2.8.0,<3.0" },
+    { name = "numba", specifier = ">=0.56.0,<1.0" },
+    { name = "numpy", specifier = ">=1.21.0,<2.0" },
+    { name = "pandas", specifier = ">=1.5.0,<2.0" },
+    { name = "pillow", specifier = ">=9.0.0,<10.0" },
+    { name = "pydot", specifier = ">=4.0.1,<5.0" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3,<10.0" },
+    { name = "scikit-learn", specifier = ">=1.2.0,<2.0" },
+    { name = "scipy", specifier = ">=1.9.0,<2.0" },
+    { name = "seaborn", marker = "extra == 'ml'", specifier = ">=0.13,<1" },
+    { name = "sigfig", marker = "extra == 'ml'", specifier = ">=1.3,<2" },
+    { name = "sparse", marker = "extra == 'ml'", specifier = ">=0.13" },
+    { name = "sphinx", marker = "extra == 'docs'", specifier = ">=8.0" },
+    { name = "sphinx-rtd-theme", marker = "extra == 'docs'", specifier = ">=3.0.0rc1" },
+    { name = "sphinxcontrib-bibtex", marker = "extra == 'docs'", specifier = ">=2.6" },
+    { name = "tqdm", specifier = ">=4.64.0,<5.0" },
+    { name = "triton", marker = "extra == 'full'" },
+]
+provides-extras = ["ml", "demos", "docs", "test", "full"]
 
 [[package]]
 name = "cairocffi"
@@ -419,6 +457,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d6/39/cbd21c9133d02b4e60899ed466ad5e876553ea68ebffee6209e7dcafc8d4/dask-2026.7.1.tar.gz", hash = "sha256:5727484427665f051e86bf87d021a64d6411141cdc8a20bfe3c1ad2968cc06b7", size = 11548794, upload-time = "2026-07-14T01:06:22.46Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7e/5f/7c22733da92b3a6cc4dddcaa8731089d213c2790bbc997e51c429a4e8f8b/dask-2026.7.1-py3-none-any.whl", hash = "sha256:985ffd6c5e9d7979ede515e84ae8d39b647d6aa64f77600f15714ff65f578fe6", size = 1496882, upload-time = "2026-07-14T01:06:20.341Z" },
+]
+
+[package.optional-dependencies]
+array = [
+    { name = "numpy" },
 ]
 
 [[package]]
@@ -1249,7 +1292,7 @@ name = "minervachem"
 source = { editable = "." }
 dependencies = [
     { name = "architector" },
-    { name = "buhito" },
+    { name = "buhito", extra = ["ml"] },
     { name = "cairosvg" },
     { name = "dask" },
     { name = "distributed" },
@@ -1290,7 +1333,7 @@ lamel = [
 [package.metadata]
 requires-dist = [
     { name = "architector", specifier = ">=0.0.10,<1" },
-    { name = "buhito", specifier = "<1" },
+    { name = "buhito", extras = ["ml"], editable = "../buhito" },
     { name = "cairosvg", specifier = ">=2.9.0,<3" },
     { name = "coverage", marker = "extra == 'dev'", specifier = ">=5.5,<8.0" },
     { name = "dask", specifier = ">=2026.7.1" },

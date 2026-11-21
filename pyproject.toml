@@ -51,7 +51,7 @@ dependencies = [
     "dask>=2026.7.1",
     "distributed>=2026.7.1",
     "rdkit>2023.9.6,<2026.0",
-    "buhito<1",
+    "buhito[ml]<1",
     "reportlab>=5.0.0,<6",
     "architector>=0.0.10,<1",
 ]
@@ -81,6 +81,7 @@ testpaths = ["tests"]
 members = ["lamel"]
 
 [tool.uv.sources]
+buhito = { path = "../buhito", editable = true }
 minervachem = { workspace = true }
 minervachem-lamel = { workspace = true }
 
