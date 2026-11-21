@@ -7,5 +7,5 @@ if [[ -f "$PROJECT_DIR/.env" ]]; then
     source "$PROJECT_DIR/.env"
     export MAIL_USER="${MAIL_USER:-}"
 fi
-exec uv run --project "$PROJECT_DIR" --all-extras python "$PROJECT_DIR/../buhito/src/buhito/demo_runner.py" \
+exec uv run --project "$PROJECT_DIR" --all-extras python "$SCRIPT_DIR/submit_demos.py" \
     --project "$PROJECT_DIR" --demo-root demos --all "$@"

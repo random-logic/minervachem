@@ -25,5 +25,6 @@ export JOBLIB_TEMP_FOLDER="$RUNTIME_BASE/joblib"
 mkdir -p "$JUPYTER_RUNTIME_DIR" "$IPYTHONDIR" "$MPLCONFIGDIR" "$XDG_CACHE_HOME" "$JOBLIB_TEMP_FOLDER"
 cd "$PROJECT_DIR"
 # Prepare the environment and execute the selected demo only on the compute node.
+# The worker uses nbconvert --execute --inplace to overwrite the original notebook.
 exec uv run --project "$PROJECT_DIR" --all-extras python -m buhito.demo_worker \
     --project "$PROJECT_DIR" --demo-root "$DEMO_ROOT" "$@"
