@@ -2,4 +2,10 @@
 # Submit one independent Slurm job per demo.
 set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-exec "$SCRIPT_DIR/run_demo.sh" --all "$@"
+PROJECT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+if [[ -f "$PROJECT_DIR/.env" ]]; then
+    source "$PROJECT_DIR/.env"
+    export MAIL_USER="${MAIL_USER:-}"
+fi
+exec uv run --project "$PROJECT_DIR" --all-extras python "$PROJECT_DIR/../buhito/src/buhito/demo_runner.py" \
+    --project "$PROJECT_DIR" --demo-root demos --all "$@"
