@@ -601,9 +601,9 @@ def run_benchmark(
 
 def _parse_args(argv = None):
     p = argparse.ArgumentParser(description="Benchmark BFS vs DFS graphlet featurizers on a chemistry dataset.")
-    p.add_argument("--data", dest="data_csv", required=True, type=Path, help="Path to CSV with a 'smiles' column.")
+    p.add_argument("--data", dest="data_csv", default=Path(__file__).resolve().parent / "qm9data" / "qm9_processed.csv", type=Path, help="Path to CSV with a 'smiles' column; defaults to the bundled benchmark CSV.")
     p.add_argument("--outdir", type=Path, default=Path("bench_results"), help="Output directory for logs/CSVs.")
-    p.add_argument("--max-len", dest="max_lens", type=int, nargs="+", required=True, help="One or more max_len values.")
+    p.add_argument("--max-len", dest="max_lens", type=int, nargs="+", default=[3], help="One or more max_len values.")
     p.add_argument("--repeats", type=int, default=3, help="Number of repeats per (algorithm, max_len).")
     p.add_argument("--train-size", type=float, default=0.8, help="Train fraction for fit_transform (rest is transform). Use 1 to disable split.")
     p.add_argument("--random-state", type=int, default=42, help="Random seed for sampling and split.")

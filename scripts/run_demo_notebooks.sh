@@ -182,6 +182,7 @@ safe_name="${relative////__}"
 log_file="$LOG_DIR/${safe_name%.ipynb}.log"
 
 cores="${SLURM_CPUS_PER_TASK:-1}"
+export LOKY_MAX_CPU_COUNT="$cores"
 
 echo "Running $relative with $cores CPU(s)"
 

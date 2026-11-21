@@ -30,7 +30,10 @@ Every notebook is executed with `nbconvert --execute --inplace`: successful resu
 replace its original `.ipynb`, with no `_executed`/`.executed` copy. A failed
 execution leaves the original notebook unchanged. Logs go to `logs/`.
 
-Notebook `HPC_RESOURCES` comments set CPU/memory requests. Other demos default to
+Notebook `HPC_RESOURCES` comments in the first Markdown cell set CPU/memory
+requests. The shared runner validates every notebook marker before submitting
+any jobs; missing or invalid markers are errors. Joblib workers are capped at
+`SLURM_CPUS_PER_TASK` and native library threads are limited to one per worker. Other demos default to
 1 CPU and 8G RAM. Override with `--cpus`, `--mem`, `--time`, `--partition`,
 `--account`, or `--mail-user`; `HPC_PARTITION`, `HPC_ACCOUNT`, `HPC_TIME`, and
 `MAIL_USER` are also supported. The scripts load `.env` when present.
@@ -60,3 +63,19 @@ run a script explicitly.
 
 The synthetic PADRE notebook and Reddit demos now live in Buhito and have runners
 in Buhito's `scripts/` directory.
+
+## Notebook resource requests
+
+| Notebook | CPUs | RAM | Workload |
+| --- | ---: | ---: | --- |
+| `1_Obtaining_a_fingerprint.ipynb` | 2 | 4G | Individual molecule fingerprints |
+| `2_Regression_and_visualization.ipynb` | 64 | 64G | Full QM9 featurization and regression |
+| `3_Advanced_fitting_and_unseen_bits.ipynb` | 64 | 64G | Dataset featurization and model fitting |
+| `5_Filtering_substructures_in_fp.ipynb` | 64 | 64G | Multiple QM9 feature/filtering runs |
+| `mcts/1_MCTS_with_RDKit.ipynb` | 2 | 8G | Descriptor-based molecular search |
+| `mcts/2_MCTS_with_MinervaChem.ipynb` | 64 | 64G | Molecular model training and search |
+| `mcts/3_MCTS_experiments.ipynb` | 2 | 8G | Search experiments |
+
+Molecular pipeline training uses the Slurm CPU allocation by default. These are
+configured budgets based on workload; actual optimal CPU and memory requests
+require measurements on the target HPC hardware.

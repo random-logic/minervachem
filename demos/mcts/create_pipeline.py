@@ -14,6 +14,10 @@ def create_pipeline(df, n_jobs=None):
         pipeline: model pipeline object
     """
 
+    if n_jobs is None:
+        import os
+        n_jobs = int(os.environ.get('SLURM_CPUS_PER_TASK', '1'))
+
     train, test = train_test_split(
         df,
         train_size=0.8,
