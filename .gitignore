@@ -10,3 +10,11 @@ build/*
 .gitattributes
 .env
 logs
+
+# Downloaded or locally prepared input datasets
+/demos/qm9/qm9data/
+/demos/qm9_data_files/
+/demos/qm9_processed.csv
+/Datasets/
+/Datasets_no_split/
+/Datasets_Agg/
