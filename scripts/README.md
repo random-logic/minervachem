@@ -8,22 +8,25 @@ From the MinervaChem repository root:
 
 ```sh
 ./scripts/run_demo.sh --list
-./scripts/run_all_demos.sh --slurm
-./scripts/run_demo.sh --demo demos/1_Obtaining_a_fingerprint.ipynb --slurm
-./scripts/run_demo.sh --demo demos/qm9/benchmark_graphlet_featurizers_train_test.py --slurm -- --data demos/qm9/qm9data/qm9_processed.csv --max-len 3 --n-jobs 8
-./scripts/run_demo.sh --demo demos/process_qm9.py --slurm
-./scripts/run_demo.sh --demo demos/mcts/create_pipeline.py --slurm -- --limit 100 --output qm9_pipeline.joblib
+./scripts/run_all_demos.sh
+./scripts/run_demo.sh --demo demos/1_Obtaining_a_fingerprint.ipynb
+./scripts/run_demo.sh --demo demos/qm9/benchmark_graphlet_featurizers_train_test.py -- --data demos/qm9/qm9data/qm9_processed.csv --max-len 3 --n-jobs 8
+./scripts/run_demo.sh --demo demos/process_qm9.py
+./scripts/run_demo.sh --demo demos/mcts/create_pipeline.py -- --limit 100 --output qm9_pipeline.joblib
 ```
 
 `run_all_demos.sh` discovers every Python demo and notebook under `demos/`,
 recursively. It excludes checkpoints, hidden directories, and old executed copies.
-With `--slurm` it submits one independent job per demo; without it demos run
-locally in sequence. Scripts run from the repository root; notebooks run from
+The shell launchers submit one independent Slurm job per selected demo by default.
+`--slurm` remains accepted for compatibility. They require `sbatch`; submission
+failure never falls back to local execution. Python demos and notebooks both
+run through `demo_job.sh` on compute nodes. The worker refuses to execute without
+a Slurm allocation. The frontend runs the submission script through `uv run`;
+only the batch worker executes demo code. Scripts run from the repository root; notebooks run from
 their own directory so relative data paths continue to work. Python arguments
 following `--` are forwarded unchanged. All-demo runs use each demo's default
 inputs, so supply the required datasets first. This is not a dependency scheduler:
-run preprocessing before demos that need its output. Local failures are collected
-and cause a nonzero exit after the remaining demos run. Slurm submission failures
+run preprocessing before demos that need its output. Slurm submission failures
 stop further submissions; already submitted jobs remain queued.
 
 Every notebook is executed with `nbconvert --execute --inplace`: successful results
@@ -79,3 +82,9 @@ in Buhito's `scripts/` directory.
 Molecular pipeline training uses the Slurm CPU allocation by default. These are
 configured budgets based on workload; actual optimal CPU and memory requests
 require measurements on the target HPC hardware.
+
+The batch worker follows the original notebook runner: one node and task,
+`standard` QoS, account `w26_pfas_g`, no GPUs, and no requeue. Use `--account`
+or `HPC_ACCOUNT` to override the account. Runtime and cache directories use
+`SLURM_TMPDIR` (or `/tmp`) inside each job. The frontend requires `uv` and `sbatch`. It runs the submission script through
+`uv run` using the project Python, without importing or executing demo code.
