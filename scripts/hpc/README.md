@@ -1,4 +1,29 @@
-# Upload MinervaChem input data to HPC
+# Transfer MinervaChem data and logs
+
+## Download logs
+
+Run locally from this checkout (or invoke the script by its full path):
+
+```bash
+# Download missing logs from se:~/minervachem/logs into this checkout's logs/.
+bash scripts/hpc/download_logs.sh
+
+# Refresh existing logs, including logs that have grown since the last download.
+bash scripts/hpc/download_logs.sh --redownload
+
+# Preview transfers; this still connects to HPC for the file listing.
+bash scripts/hpc/download_logs.sh --dry-run
+
+# Override the SSH alias or remote directory.
+bash scripts/hpc/download_logs.sh --remote se --remote-dir /users/ajowe/minervachem/logs
+```
+
+Requires rsync locally and remotely. Existing local files are skipped by default;
+`--redownload` overwrites them. Local-only logs are retained and remote files are
+never deleted. WSL automatically uses Windows `ssh.exe` for smart-card login;
+other systems use `ssh`. Authentication happens interactively when you run it.
+
+## Upload input data
 
 From the current MinervaChem repository root:
 

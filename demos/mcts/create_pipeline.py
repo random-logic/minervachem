@@ -1,3 +1,4 @@
+# HPC_RESOURCES: cpus=8 mem=32G
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import Ridge
 from minervachem.fingerprinters import GraphletFingerprinter

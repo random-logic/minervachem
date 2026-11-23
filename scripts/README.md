@@ -36,8 +36,9 @@ execution leaves the original notebook unchanged. Logs go to `logs/`.
 Notebook `HPC_RESOURCES` comments in the first Markdown cell set CPU/memory
 requests. The shared runner validates every notebook marker before submitting
 any jobs; missing or invalid markers are errors. Joblib workers are capped at
-`SLURM_CPUS_PER_TASK` and native library threads are limited to one per worker. Other demos default to
-1 CPU and 8G RAM. Override with `--cpus`, `--mem`, `--time`, `--partition`,
+`SLURM_CPUS_PER_TASK` and native library threads are limited to one per worker.
+Python demos can set a `# HPC_RESOURCES: cpus=8 mem=32G` comment; without one,
+they default to 1 CPU and 8G RAM. Override with `--cpus`, `--mem`, `--time`, `--partition`,
 `--account`, or `--mail-user`; `HPC_PARTITION`, `HPC_ACCOUNT`, `HPC_TIME`, and
 `MAIL_USER` are also supported. The scripts load `.env` when present.
 
@@ -67,9 +68,9 @@ run a script explicitly.
 The synthetic PADRE notebook and Reddit demos now live in Buhito and have runners
 in Buhito's `scripts/` directory.
 
-## Notebook resource requests
+## Demo resource requests
 
-| Notebook | CPUs | RAM | Workload |
+| Demo | CPUs | RAM | Workload |
 | --- | ---: | ---: | --- |
 | `1_Obtaining_a_fingerprint.ipynb` | 2 | 4G | Individual molecule fingerprints |
 | `2_Regression_and_visualization.ipynb` | 64 | 64G | Full QM9 featurization and regression |
@@ -78,10 +79,20 @@ in Buhito's `scripts/` directory.
 | `mcts/1_MCTS_with_RDKit.ipynb` | 2 | 8G | Descriptor-based molecular search |
 | `mcts/2_MCTS_with_MinervaChem.ipynb` | 64 | 64G | Molecular model training and search |
 | `mcts/3_MCTS_experiments.ipynb` | 2 | 8G | Search experiments |
+| `mcts/create_pipeline.py` | 8 | 32G | Full QM9 model training |
+| `process_qm9.py` | 1 | 8G | Serial raw QM9 preprocessing |
+| `qm9/benchmark_graphlet_featurizers_train_test.py` | 8 | 32G | QM9 graph conversion and BFS/DFS benchmarking |
 
-Molecular pipeline training uses the Slurm CPU allocation by default. These are
-configured budgets based on workload; actual optimal CPU and memory requests
-require measurements on the target HPC hardware.
+These are per-job allocations. Regression, advanced fitting, and filtering use
+`n_jobs=-3`, which starts up to 62 joblib workers in a 64-CPU allocation. Pipeline
+training and the QM9 benchmark use the Slurm CPU allocation by default. Serial
+stages do not keep every allocated CPU busy.
+
+Local sampled workload checks on 2026-11-21 support keeping the notebook
+allocations and raising the two parallel Python demos from 1 CPU/8G to 8 CPUs/32G.
+See [the smoke-run report](demo_resource_smoke.md) for measurements and limits.
+Full-dataset peak usage and optimal requests still require measurements on the
+target HPC hardware.
 
 The batch worker follows the original notebook runner: one node and task,
 `standard` QoS, account `w26_pfas_g`, no GPUs, and no requeue. Use `--account`

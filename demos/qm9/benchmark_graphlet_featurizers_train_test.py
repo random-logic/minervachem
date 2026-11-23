@@ -1,5 +1,6 @@
 
 #!/usr/bin/env python3
+# HPC_RESOURCES: cpus=8 mem=32G
 """
 Benchmark BFS vs DFS graphlet featurizers in buhito on a QM9 dataset.
 
@@ -607,7 +608,7 @@ def _parse_args(argv = None):
     p.add_argument("--repeats", type=int, default=3, help="Number of repeats per (algorithm, max_len).")
     p.add_argument("--train-size", type=float, default=0.8, help="Train fraction for fit_transform (rest is transform). Use 1 to disable split.")
     p.add_argument("--random-state", type=int, default=42, help="Random seed for sampling and split.")
-    p.add_argument("--n-jobs", type=int, default=-1, help="Passed to GraphletTransformer (1=single-core, -1=all cores).")
+    p.add_argument("--n-jobs", type=int, default=int(os.environ.get('SLURM_CPUS_PER_TASK', '-1')), help="Passed to GraphletTransformer; defaults to the Slurm CPU allocation, or all cores outside Slurm.")
     p.add_argument("--chunk-size", type=str, default="even", help="Passed to GraphletTransformer (e.g., 'even').")
     p.add_argument("--verbose", type=int, default=0, help="Passed to GraphletTransformer.")
     p.add_argument("--log-level", type=str, default="INFO", help="Logging level (INFO/DEBUG).")
